@@ -1,11 +1,11 @@
 from typing import List, Dict, Callable
 from queue import PriorityQueue
 from node import * 
+from uuid import uuid4
 
 class Production () : 
     
     def __init__ (self, 
-        id: str, 
         priority: int, 
         pred: str, 
         cond: Callable, 
@@ -14,7 +14,7 @@ class Production () :
         prob: List, 
         pred_kwargs={}
         ) : 
-        self.id = id
+        self.id = uuid4()
         self.priority = priority
         self.pred = pred
         self.cond = cond

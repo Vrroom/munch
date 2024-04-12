@@ -1,6 +1,7 @@
 from more_itertools import flatten
 from drawTools import * 
 from uuid import uuid4
+import numpy as np
 
 class Node () :
     
@@ -42,6 +43,16 @@ class Node () :
                     set_visible(copy)
                     fit_in_scope(copy, self.scope)
                     return copy
+                elif 'objects' in geometry_registry[self.id] : 
+                    scope_aspect = self.scope.size[1] / self.scope.size[0]
+                    cand_bounds = [bounding_box(_.data) for _ in geometry_registry[self.id]['objects']]
+                    cand_aspects = [(M[1] - m[1]) / (M[0] - m[0]) for m, M in cand_bounds]
+                    diffs = [abs(a - scope_aspect) for a in cand_aspects]
+                    obj = geometry_registry[self.id]['objects'][np.argmin(diffs)]
+                    copy = duplicate_object(self.id, obj)
+                    set_visible(copy)
+                    fit_in_scope(copy, self.scope)
+                    return copy
                 if 'material' in geometry_registry[self.id] :
                     material = geometry_registry[self.id]['material']
         obj = self.scope.draw(self.id)
@@ -78,9 +89,5 @@ def no_parent (node) :
 def check_intersect (node, node_list) : 
     for that in node_list : 
         if node.scope.approx_intersect(that.scope) :
-            print(node.id, that.id)
-            print(node.scope)
-            print(that.scope)
-            print('-----------------------')
             return True
     return False

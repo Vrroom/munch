@@ -7,8 +7,9 @@ import mathutils
 from importlib import reload
 import sys
 import os
+print(os.getcwd())
 sys.path.append(os.getcwd())
-import utils, drawTools, node, scope, production, graphTools, bbox, roofTools
+import utils, drawTools, node, scope, production, graphTools, bbox, roofTools, assetDict
 reload(utils)
 reload(drawTools)
 reload(node)
@@ -17,6 +18,7 @@ reload(production)
 reload(graphTools)
 reload(bbox)
 reload(roofTools)
+reload(assetDict)
 from utils import *
 from drawTools import *
 from node import *
@@ -25,6 +27,7 @@ from production import *
 from graphTools import *
 from bbox import *
 from roofTools import *
+from assetDict import *
 import numpy as np 
 from PIL import Image
 from skimage.measure import label
@@ -37,6 +40,8 @@ from perlin_numpy import (
     generate_fractal_noise_2d, generate_fractal_noise_3d,
     generate_perlin_noise_2d, generate_perlin_noise_3d
 )
+
+clear_all()
 
 LAYOUT = np.array(Image.open('munch.png').convert('RGB'))
 WATER = np.array([0, 183, 239])
@@ -147,7 +152,6 @@ BRICK_COLOR = [1.0, 0.69, 0.38, 1.0]
 ROOF_TILE_SZ = 1.0
 
 multi_storey = Production(
-    id='0',
     priority=0, 
     pred='multi_storey',
     cond=ALWAYS,
@@ -159,7 +163,6 @@ multi_storey = Production(
 )
 
 ground_floor = Production(
-    id='1', 
     priority=1,
     pred='ground_floor', 
     cond=ALWAYS, 
@@ -172,7 +175,6 @@ def custom_scope_modifier (scope) :
     return scope, scale_scope(scale_scope(scope, 0.5, 0), 1.5, 1)
 
 floor = Production(
-    id='1', 
     priority=1,
     pred='floor', 
     cond=ALWAYS, 
@@ -184,7 +186,6 @@ floor = Production(
 )
 
 top_floor = Production(
-    id='1', 
     priority=1,
     pred='top_floor', 
     cond=ALWAYS, 
@@ -208,7 +209,6 @@ top_floor = Production(
 #)
 
 roof = Production(
-    id='-1', 
     priority=3, 
     pred='roof', 
     cond=ALWAYS, 
@@ -221,7 +221,6 @@ roof = Production(
 )
 
 expanded_roof = Production(
-    id='-2',
     priority=3,
     pred='expanded_roof', 
     cond=ALWAYS,
@@ -238,7 +237,6 @@ expanded_roof = Production(
 )
 
 roof_tile = Production(
-    id='-3',
     priority=3,
     pred='roof_tile', 
     cond=ALWAYS,
@@ -248,7 +246,6 @@ roof_tile = Production(
 )             
 
 ground_floor_facades = Production(
-    id='1', 
     priority=2, 
     pred='ground_floor_facades', 
     cond=ALWAYS, 
@@ -258,7 +255,6 @@ ground_floor_facades = Production(
 )
 
 facades = Production(
-    id='1', 
     priority=2, 
     pred='facades', 
     cond=ALWAYS, 
@@ -268,7 +264,6 @@ facades = Production(
 )
 
 ground_floor_facade = Production(
-    id='2', 
     priority=2, 
     pred='ground_floor_facade', 
     cond=FACING_POS_X,
@@ -284,7 +279,6 @@ ground_floor_facade = Production(
 )
 
 ground_floor_facade_2 = Production(
-    id='14', 
     priority=2, 
     pred='ground_floor_facade', 
     cond=complement(FACING_POS_X),
@@ -294,7 +288,6 @@ ground_floor_facade_2 = Production(
 )
 
 facade = Production(
-    id='14', 
     priority=2, 
     pred='facade', 
     cond=ALWAYS,
@@ -304,7 +297,6 @@ facade = Production(
 )
 
 tiles = Production(
-    id='3', 
     priority=2, 
     pred='tiles',
     cond=ALWAYS,
@@ -314,7 +306,6 @@ tiles = Production(
 )
 
 tile = Production(
-    id='4',
     priority=2,
     pred='tile',
     cond=ALWAYS,
@@ -324,11 +315,9 @@ tile = Production(
 )
 
 def OCCLUDED (node, *args, **kwargs) : 
-#    return False
     return check_intersect(node, no_parent(node))
 
 window = Production(
-    id='5',
     priority=4,
     pred='window',
     cond=complement(OCCLUDED),
@@ -338,7 +327,6 @@ window = Production(
 )
 
 window2 = Production(
-    id='213',
     priority=4,
     pred='window',
     cond=OCCLUDED,
@@ -347,19 +335,19 @@ window2 = Production(
     prob=[1.0],
 )
 
-
 wall = Production(
-    id='6',
     priority=2,
     pred='wall',
     cond=ALWAYS,
-    scope_modifiers=[partial(extrude, sz=WALL_DEPTH)],
-    succ=[['bricks']],
+#    scope_modifiers=[],
+#    succ=[],
+#    prob=[]
+    scope_modifiers=[partial(extrude, sz=0.01)],
+    succ=[['wall_literal']],
     prob=[1.0]
 )
 
 entrance = Production(
-    id='7',
     priority=2,
     pred='entrance',
     cond=ALWAYS,
@@ -369,7 +357,6 @@ entrance = Production(
 )
 
 wall_window = Production(
-    id='8',
     priority=2,
     pred='wall_window',
     cond=ALWAYS,
@@ -379,7 +366,6 @@ wall_window = Production(
 )
 
 wall_door = Production(
-    id='9',
     priority=2,
     pred='wall_door',
     cond=ALWAYS,
@@ -389,7 +375,6 @@ wall_door = Production(
 )
 
 door = Production(
-    id='10', 
     priority=2,
     pred='door',
     cond=ALWAYS, 
@@ -399,7 +384,6 @@ door = Production(
 )
 
 window_literal = Production(
-    id='11',
     priority=2,
     pred='window_literal',
     cond=ALWAYS,
@@ -409,7 +393,6 @@ window_literal = Production(
 )
 
 door_literal = Production(
-    id='12',
     priority=2,
     pred='door_literal',
     cond=ALWAYS,
@@ -418,8 +401,16 @@ door_literal = Production(
     prob=[],
 )
 
+wall_literal = Production(
+    priority=2,
+    pred='wall_literal',
+    cond=ALWAYS,
+    scope_modifiers=[],
+    succ=[],
+    prob=[],
+)
+
 bricks = Production(
-    id='13',
     priority=2,
     pred='bricks',
     cond=ALWAYS,
@@ -439,7 +430,6 @@ bricks = Production(
 )
 
 brick = Production(
-    id='15',
     priority=2,
     pred='brick',
     cond=ALWAYS,
@@ -448,12 +438,16 @@ brick = Production(
     prob=[],
 )
 
+ASSET_DICT = eval(ASSET_DICT)
+[set_invisible(_) for _ in filter(is_object, list_dict_flatten(ASSET_DICT))]
+
 geometry_registry = dict(
     window_literal=dict(object=WINDOW_OBJ),
     door_literal=dict(object=DOOR_OBJ),
     brick=dict(object=BRICK_OBJ),
     roof_tile=dict(object=ROOF_TILE_OBJ),
-    roof=dict(object=mansard_roof (10, 10, 2, 0.2, name='mansard'))
+    roof=dict(object=mansard_roof (10, 10, 2, 0.2, name='mansard')),
+    wall_literal=dict(objects=[_['obj'] for _ in ASSET_DICT['wall'] if 'light' in _['props']])
 #    wall_literal=dict(material=BRICK_MAT)
 )
 
@@ -463,8 +457,7 @@ for k in geometry_registry.keys() :
  
 all_prods = [
     multi_storey,
-    floor,
-    #ground_floor, floor, top_floor,
+    ground_floor, floor, top_floor,
     ground_floor_facades, facades,
     ground_floor_facade, ground_floor_facade_2,
     facade,
@@ -473,26 +466,26 @@ all_prods = [
     wall_door, door, wall_window,
     window_literal, door_literal,
 #    expanded_roof, roof_tile, roof
-    roof
+    roof, wall_literal
 ]
 
-def seed_everything(seed: int):
-    import random, os
-    import numpy as np
-    import torch
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    
 seed_everything(42)
 
 set_material_color('Procedural Curved Pottery Clay', BRICK_COLOR)
 
 node = run_derivation(all_prods, 'multi_storey', FOOTPRINT)
-clear_all()
+#clear_all()
 
 #print(len(no_parent(node.children[0])))
 #FOOTPRINT.draw()
 #scale_scope(FOOTPRINT, 0.5, 0).draw()
 #print(node)
 [_.draw(geometry_registry) for _ in leaves(node)]
+
+#print([_['obj'] for _ in ASSET_DICT['wall'] if 'light' in _['props']])
+
+#gabled_roof (5, 10, 5)
+#gabled_roof (5, 5, 5)
+
+
+

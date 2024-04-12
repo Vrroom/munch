@@ -1,0 +1,101 @@
+from drawTools import *
+
+ASSET_DICT = \
+"""
+dict(
+    wall=[
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_1_by_1_light'), 
+            aspect=(1, 1),
+            props=set(['light'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_1_by_2'), 
+            aspect=(1, 2),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_0-5_by_2'), 
+            aspect=(1, 4),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_0-5_by_2_light'), 
+            aspect=(1, 4),
+            props=set(['light'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_1_by_2_light'), 
+            aspect=(1, 2),
+            props=set(['light'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_1_by_3'), 
+            aspect=(1, 3),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_1_by_3_light'), 
+            aspect=(1, 3),
+            props=set(['light'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_2_by_1'), 
+            aspect=(2, 1),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_2_by_1_light'), 
+            aspect=(2, 1),
+            props=set(['light'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_2_by_3'), 
+            aspect=(2, 3),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_2_by_3_light'), 
+            aspect=(2, 3),
+            props=set(['light'])
+        ),
+    ],
+    wall_window=[
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_window_center_2_by_3'), 
+            aspect=(2, 3),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_window_center_2_by_3_light'), 
+            aspect=(2, 3),
+            props=set(['light'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_window_center_2_by_3_light_2'), 
+            aspect=(2, 3),
+            props=set(['light'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_window_inset_center_2_by_3'), 
+            aspect=(2, 3),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_window_inset_center_bottom_2_by_3'), 
+            aspect=(2, 3),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_window_inset_center_top_2_by_3'), 
+            aspect=(2, 3),
+            props=set(['dark'])
+        ),
+        dict(
+            obj=load_blend_model('./assets/walls.blend', 'wall_window_inset_top_2_by_3'), 
+            aspect=(2, 3),
+            props=set(['dark'])
+        ),
+    ]
+)
+"""

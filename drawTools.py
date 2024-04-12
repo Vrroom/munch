@@ -277,6 +277,7 @@ def apply_matrix_to_mesh_obj (obj, mat) :
     blender_mat = Matrix(mat.tolist())
     for vert in obj.data.vertices: 
         vert.co = blender_mat @ vert.co
+    obj.data.update()
 
 def fit_in_scope(obj, scope):
     v_min, v_max = get_obj_bounds(obj) 
