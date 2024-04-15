@@ -5,6 +5,7 @@ import bmesh
 from mathutils import Vector, Matrix
 from utils import *
 from scope import Scope
+from more_itertools import flatten
 from contextlib import contextmanager
 
 def make_mesh (verts, faces, name='mesh') :
@@ -30,6 +31,10 @@ def min_tuple (ta, tb) :
 
 def max_tuple (ta, tb) : 
     return tuple([max(a, b) for a, b in zip(ta, tb)])
+
+def bounding_box_object (obj) :
+    objs = flatten_object_tree(obj)
+    return bounding_box_object_list(objs)
 
 def bounding_box_object_list (obj_list) : 
     bbs = [bounding_box(_.data) for _ in obj_list] 
@@ -268,6 +273,22 @@ def draw_rectangle (location, xy, scale, name=None) :
     bm.free()
     
     return obj
+
+def flatten_object_tree (obj) :
+    if obj.type == 'MESH': 
+        return [obj]
+    elif obj.type == 'EMPTY': 
+        return list(flatten(map(flatten_object_tree, obj.children)))
+    else :
+        return []
+
+def apply_matrix_to_obj (obj, mat) : 
+    if obj.type == 'MESH': 
+        apply_matrix_to_mesh_obj(obj, mat) 
+    elif obj.type == 'EMPTY': 
+        objs = flatten_object_tree(obj) 
+        for sub_obj in objs : 
+            apply_matrix_to_mesh_obj(sub_obj, mat)
 
 def apply_matrix_to_mesh_obj (obj, mat) : 
     """ mat is 4 by 4 homogeneous matrix """ 

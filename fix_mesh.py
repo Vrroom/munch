@@ -7,7 +7,8 @@ import mathutils
 from importlib import reload
 import sys
 import os
-print(os.getcwd())
+import os.path as osp
+#print(os.getcwd())
 sys.path.append(os.getcwd())
 import utils, drawTools, node, scope, production, graphTools, bbox, roofTools
 reload(utils)
@@ -39,14 +40,32 @@ from perlin_numpy import (
     generate_perlin_noise_2d, generate_perlin_noise_3d
 )
 
-rot_matrix = np.array([
-    [1, 0, 0],
-    [0, 0, 1],
-    [0, 1, 0]
-])
+#print(flatten_object_tree(bpy.data.objects['Bench']))
+names = [f'balustrade_{i+1}' for i in range(4)]
+#names = ['balustra']
+for name in names :
+    obj = bpy.data.objects[name]
+    print(obj.type)
+    m, M = bounding_box_object(obj)
+    rot_matrix = np.array([
+        [1, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0]
+    ])
+    hom_mat  = homogenize_rotation_matrix(rot_matrix)
 
-hom_rot_mat = homogenize_rotation_matrix(rot_matrix)
-for obj in bpy.data.objects : 
-    if obj.type == 'MESH': 
-        print(obj.name)
-        apply_matrix_to_mesh_obj(obj, hom_rot_mat)
+#    hom_mat = homogenize_translation(-np.array(m))
+    apply_matrix_to_obj(obj, hom_mat)
+#print(m, M)
+
+#rot_matrix = np.array([
+#    [0, 1, 0],
+#    [1, 0, 0],
+#    [0, 0, 1]
+#])
+#hom_mat  = homogenize_rotation_matrix(rot_matrix)
+
+#for obj in bpy.data.objects : 
+#    if obj.type == 'MESH': 
+#        print(obj.name)
+#        apply_matrix_to_mesh_obj(obj, hom_rot_mat)
