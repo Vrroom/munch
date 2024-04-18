@@ -160,7 +160,7 @@ class Scope () :
         self.set_aabb()
         that.set_aabb()
         aabb_self = self.shrink_aabb(scale_factor)
-        aabb_that = that.aabb # shrink_aabb(1.)
+        aabb_that = that.shrink_aabb(1.)
         for i in range(3) : 
             ms, Ms = aabb_self[0][i], aabb_self[1][i]
             mt, Mt = aabb_that[0][i], aabb_that[1][i]

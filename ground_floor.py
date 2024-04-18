@@ -85,7 +85,20 @@ WINDOW_HEIGHT = 1.6
 ABUTMENT_SIDES = random.choice([6, 8])
 ABUTMENT_WIDTH = random.uniform(1.5, 3)
 ABUTMENT_LENGTH = ABUTMENT_WIDTH
-N_ABUTMENT = random.randint(1, 4)
+N_ABUTMENT = random.randint(1, 4) 
+NBRS = [(0, 1), (0, 3), (1, 2), (2, 4), (3, 5), (5, 6), (4, 7), (6, 7)]
+    
+while True :
+    ABUTS = random.sample([0, 1, 2, 3, 4, 5, 6, 7], k=N_ABUTMENT)
+    found_mismatch = False
+    for (i, j) in combinations(ABUTS, 2) :
+        if (i, j) in NBRS or (j, i) in NBRS :
+            found_mismatch = True
+    if not found_mismatch :
+        break
+
+ABUTS_FACTOR = random.uniform(0.05, 0.1)
+ABUTS_FRAC = [ABUTS_FACTOR, 0.5, 1. - ABUTS_FACTOR]
 
 #####################################################################
 ## BALCONY 
@@ -100,7 +113,9 @@ N_TAPER = random.randint(1, 5)
 MAX_TAPER = 5
 TAPER_MULTIPLIER = 0.75
 
-# WALL COLORS
+#####################################################################
+## COLORS
+#####################################################################
 WALL_COLORS = [
     np.array((14, 70, 163, 255)) / 255.,
     np.array((118, 171, 174, 255)) / 255.,
@@ -117,6 +132,17 @@ GROUND_COLORS = [
 
 WALL_COLOR = random.choice(WALL_COLORS)
 GROUND_COLOR = random.choice(GROUND_COLORS)
+
+ground_floor = Production(
+    priority=1, 
+    pred='ground_floor', 
+    cond = ALWAYS,
+    scope_modifiers=[
+        partial(subdiv, axis=2, args=[GROUND_BASE, FLOOR_HEIGHT]),
+    ],
+    succ=[['slab_literal', 'floor']],
+    prob=[1.0]
+)
     
 floor = Production(
     priority=1,
@@ -130,31 +156,17 @@ floor = Production(
         ['facades', 'epsilon'],
         ['facades', 'abutments'],
     ],
-    prob=[0.0, 1.0]
+    prob=[0.1, 9.0]
 )
 
 epsilon = Production(priority=2, pred='epsilon')
 
 def MAKE_ABUTMENT (scope, n_abutment) : 
-    
-    nbrs = [(0, 1), (0, 3), (1, 2), (2, 4), (3, 5), (5, 6), (4, 7), (6, 7)]
-    
-    while True :
-        abuts = random.sample([0, 1, 2, 3, 4, 5, 6, 7], k=n_abutment)
-        found_mismatch = False
-        for (i, j) in combinations(abuts, 2) :
-            if (i, j) in nbrs or (j, i) in nbrs :
-                found_mismatch = True
-        if not found_mismatch :
-            break
-    
-    factor = random.uniform(0.05, 0.1)
-    fracs = [factor, 0.5, 1. - factor]
-    center_rel_coords = list(product(fracs, fracs))
+    center_rel_coords = list(product(ABUTS_FRAC, ABUTS_FRAC))
     center_rel_coords.remove(center_rel_coords[4])
     new_scopes = []
     
-    for abut in abuts :
+    for abut in ABUTS :
         rx, ry = center_rel_coords[abut]
         new_scope = deepcopy(scope)
         new_scope.size[0] = ABUTMENT_WIDTH
@@ -288,13 +300,119 @@ entrance2 = Production(
     prob=[1.0]
 )
 
+def BALCONY_WALL_DOOR (node) : 
+    ancestors = get_ancs(node)
+    anc_axioms = [_.id for _ in ancestors]
+    return 'ground_floor' not in anc_axioms
+    
 wall_door = Production(
     priority=4,
     pred='wall_door',
-    cond=ALWAYS,
+    cond=BALCONY_WALL_DOOR,
     scope_modifiers=[partial(subdiv, axis=1, args=[DOOR_HEIGHT, rfloat(1)])],
     succ=[['door_balcony', 'wall']],
     prob=[1.0]
+)
+
+wall_door2 = Production(
+    priority=4,
+    pred='wall_door',
+    cond=complement(BALCONY_WALL_DOOR),
+    scope_modifiers=[partial(subdiv, axis=1, args=[DOOR_HEIGHT, rfloat(1)])],
+    succ=[['door_entrance_ext', 'wall']],
+    prob=[1.0]
+)
+
+@validate_scopes
+def door_entrance_ext_scope_mod (scope) : 
+    scope1 = extrude(scope, sz=DOOR_DEPTH)[0]
+    scope2 = scale_center(
+        subscope(
+            extrude(scope, sz=1)[0], 
+            tz=DOOR_DEPTH
+        )[0],
+        sx=0.6 + DOOR_WIDTH,
+    )[0]
+    x = np.copy(scope2.global_c[:, 0])
+    y = np.copy(scope2.global_c[:, 1])
+    z = np.copy(scope2.global_c[:, 2])
+    scope2.global_c[:, 0] = x
+    scope2.global_c[:, 1] = -z
+    scope2.global_c[:, 2] = y
+    scope2.global_x += z * scope2.size[2]
+    scope2.size[1], scope2.size[2] = scope2.size[2], scope2.size[1]
+    scope2.global_x -= GROUND_BASE * scope2.global_c[:, 2]
+    scope2.size[2] = GROUND_BASE + DOOR_HEIGHT + 0.5
+    return [scope1, scope2]
+
+door_entrance_ext = Production(
+    priority=4, 
+    pred='door_entrance_ext', 
+    cond=ALWAYS, 
+    scope_modifiers=[door_entrance_ext_scope_mod], 
+    succ=[['door_literal', 'entrance_ext']],
+    prob=[1.0]
+)       
+
+entrance_ext = Production(
+    priority=2,
+    pred='entrance_ext', 
+    cond=ALWAYS,
+    scope_modifiers=[
+        partial(subdiv, axis=2, args=[GROUND_BASE, rfloat(1)]),
+        partial(subscope, sz=GROUND_BASE), 
+        partial(subscope, sz=GROUND_BASE), 
+    ],
+    succ=[
+        ['steps_and_slab', 'overhang'], 
+        ['steps_and_slab'],
+        ['steps_railing_literal']
+    ],
+    prob=[
+        0.4,
+        0.4,
+        0.2
+    ]
+)
+
+steps_and_slab = Production(
+    priority=2,
+    pred='steps_and_slab',
+    cond=ALWAYS,
+    scope_modifiers=[
+        identity,
+        partial(subdiv, axis=1, args=[rfloat(0.5), rfloat(0.5)])
+    ],
+    succ=[
+        ['steps_and_slab_literal'],
+        ['steps', 'slab_literal'],
+    ],
+    prob=[
+        0.5,
+        0.5
+    ]
+)
+
+steps_and_slab_literal = Production(
+    priority=2,
+    pred='steps_and_slab_literal',
+    cond=ALWAYS,
+)
+
+steps = Production(
+    priority=2,
+    pred='steps',
+    cond=ALWAYS,
+    scope_modifiers=[identity],
+    succ=[['steps_literal']],
+    prob=[1.0]
+)
+
+steps_literal = Production(priority=2, pred='steps_literal')
+
+steps_railing_literal = Production(
+    priority=2,
+    pred='steps_railing_literal',
 )
 
 @validate_scopes
@@ -456,15 +574,6 @@ balcony_literal = Production(priority=4, pred='balcony_literal')
 
 door_literal = Production(priority=4, pred='door_literal')
 
-#facade = Production(
-#    priority=2, 
-#    pred='facade', 
-#    cond=ALWAYS,
-#    scope_modifiers=[identity],
-#    succ=[['tiles']],
-#    prob=[1.0]
-#)
-
 tiles = Production(
     priority=2, 
     pred='tiles',
@@ -554,9 +663,12 @@ window_literal = Production(
     prob=[],
 )
     
-FLOOR_FOOTPRINT = Scope(3, np.array([0, 0, 0]), np.eye(3), [FLOOR_WIDTH, FLOOR_LENGTH, FLOOR_HEIGHT])
+FLOOR_FOOTPRINT = Scope(3, np.array([0, 0, 0]), np.eye(3), [FLOOR_WIDTH, FLOOR_LENGTH, GROUND_BASE + FLOOR_HEIGHT])
 
 geometry_registry = dict(
+    steps_and_slab_literal=dict(object=ASSET_DICT['steps_and_slab'][0]['obj']),
+    steps_literal=dict(object=ASSET_DICT['steps'][1]['obj']),
+    steps_railing_literal=dict(object=ASSET_DICT['steps'][0]['obj']),
     slab_literal=dict(object=ASSET_DICT['slab'][0]['obj']),
     covering=dict(objects=[_['obj'] for _ in ASSET_DICT['covering']], any=True),
     pillar_literal=dict(objects=[_['obj'] for _ in ASSET_DICT['pillar']], fix=True),
@@ -566,30 +678,21 @@ geometry_registry = dict(
     door_literal=dict(object=ASSET_DICT['door'][0]['obj']),
 )
 
-#balcony_prods = [balcony_all, overhang, slab_literal, balcony_literal,
-#    epsilon, covering, pillars, pillar_literal,
-#    balcony, balustrade, balustrade_literal, taper_all, taper, taper2]
-
-prods = [floor, epsilon, abutments, 
+prods = [ground_floor, floor, epsilon, abutments, 
         abutment, facades, facade, facade2, 
         tiles, tile, tile2, wall, 
-        wall2, wall_literal, wall_window, wall_door, 
+        wall2, wall_literal, wall_window, wall_door, wall_door2,
         window, window2, window_literal,
         ground, entrance, entrance2,
         door_balcony, door_literal, 
         balcony_all, overhang, slab_literal, balcony_literal, balcony_railing,
         covering, pillars, pillar_literal, balcony, balustrade, 
-        balustrade_literal, taper_all, taper, taper2,]
+        balustrade_literal, taper_all, taper, taper2,
+        entrance_ext, door_entrance_ext, steps_and_slab, 
+        steps_and_slab_literal, steps, steps_literal, steps_railing_literal]
 
-#TEST = Scope(3, np.array([0, 0, 0]), np.eye(3), [3, 3, 10])
-#R = euler_xyz_rotation_matrix(0.2, 0.2, 0.2)
-#TEST = rotate_scope(TEST, R)
-#shape = generate_ngon(6, 1.5)
-#ShapeScope.create_from_scope(shape, TEST).draw()
-#scopes = split_into_faces_using_shape(TEST, shape)
-#[_.draw() for _ in scopes]
-#TEST.draw()
-node = run_derivation(prods, 'floor', FLOOR_FOOTPRINT)
+
+node = run_derivation(prods, 'ground_floor', FLOOR_FOOTPRINT)
 #print(node)
 leaf_nodes = leaves(node)
 
@@ -597,7 +700,6 @@ all_objs = [_.draw(geometry_registry) for _ in leaf_nodes]
 
 wall_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'wall_literal']
 ground_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'ground_literal']
-#solid_texture_objects(wall_objs)
 
 for obj in wall_objs : 
     subdivide_n(obj, 3)
