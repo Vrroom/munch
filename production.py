@@ -3,15 +3,20 @@ from queue import PriorityQueue
 from node import * 
 from uuid import uuid4
 
+def uniform (n) :
+    return [1. / n for _ in range(n)]
+
+ALWAYS = lambda *args, **kwargs: True
+
 class Production () : 
     
     def __init__ (self, 
         priority: int, 
         pred: str, 
-        cond: Callable, 
-        scope_modifiers: Callable,
-        succ: List, 
-        prob: List, 
+        cond: Callable = ALWAYS,
+        scope_modifiers: List[Callable] = [],
+        succ: List = [], 
+        prob = uniform,
         pred_kwargs={}
         ) : 
         self.id = uuid4()
@@ -20,7 +25,13 @@ class Production () :
         self.cond = cond
         self.scope_modifiers = scope_modifiers
         self.succ = succ
-        self.prob = prob
+
+        if isinstance(prob, list) :
+            self.prob = prob
+        else :
+            # create uniform probability over length of succ
+            self.prob = prob(len(succ))
+
         self.pred_kwargs = pred_kwargs
         
     def __lt__ (self, that) : 
@@ -48,7 +59,13 @@ def run_derivation (productions, axiom, scope) :
         if node.is_active() and production.cond(node) and not production.is_terminal(): 
             
             branch_id = sample_idx(production.prob)
-            child_scopes = production.scope_modifiers[branch_id](node.scope)
+
+            try : 
+                child_scopes = production.scope_modifiers[branch_id](node.scope)
+            except Exception as e :
+                print(f'Node = {node}')
+                raise e
+
             succ = production.succ[branch_id]
             
             if len(child_scopes) != len(succ) : 
@@ -57,6 +74,7 @@ def run_derivation (productions, axiom, scope) :
                     f'len(scopes) = {len(child_scopes)}, '
                     f'len(succ) = {len(succ)}, '
                     f'production id = {production.id}'
+                    f'production pred = {production.pred}'
                 )
                 succ = succ * len(child_scopes)
                             

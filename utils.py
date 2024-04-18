@@ -3,6 +3,39 @@ import numpy as np
 import random
 import bpy
 
+def rotation_x(theta):
+    c, s = np.cos(theta), np.sin(theta)
+    return np.array([
+        [1, 0, 0],
+        [0, c, -s],
+        [0, s, c]
+    ])
+
+def rotation_y(theta):
+    c, s = np.cos(theta), np.sin(theta)
+    return np.array([
+        [c, 0, s],
+        [0, 1, 0],
+        [-s, 0, c]
+    ])
+
+def rotation_z(theta):
+    c, s = np.cos(theta), np.sin(theta)
+    return np.array([
+        [c, -s, 0],
+        [s, c, 0],
+        [0, 0, 1]
+    ])
+
+def euler_xyz_rotation_matrix(rx, ry, rz):
+    Rx = rotation_x(rx)
+    Ry = rotation_y(ry)
+    Rz = rotation_z(rz)
+    return Rz @ Ry @ Rx 
+
+def normalized (x) :
+    return x / np.linalg.norm(x)
+
 def is_object (x) : 
     return isinstance(x, bpy.types.Object)
 
@@ -18,6 +51,9 @@ def list_dict_flatten (obj) :
 
 def clamp (x, a, b) : 
     return max(a, min(x, b))
+
+def clamp_elem_wise_np (x, a, b) : 
+    return np.maximum(a, np.minimum(x, b))
 
 def complement(pred) : 
     return lambda x : not pred(x)
@@ -67,3 +103,11 @@ def seed_everything(seed: int):
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
     
+def generate_ngon (n, radius, theta_i=0.0) : 
+    thetas = theta_i + np.linspace(0, 2 * np.pi, n, endpoint=False)
+    xs = radius + radius * np.cos(thetas)
+    ys = radius + radius * np.sin(thetas)
+    return list(zip(xs.tolist(), ys.tolist()))
+
+def implies (a, b) :
+    return (not a) or b

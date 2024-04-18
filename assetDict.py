@@ -96,6 +96,78 @@ dict(
             aspect=(2, 3),
             props=set(['dark'])
         ),
-    ]
+    ],
+    slab=[
+        dict(
+            obj=load_blend_model('./assets/steps.blend', 'slab')
+        )
+    ],
+    steps_and_slab=[
+        dict(
+            obj=load_blend_model('./assets/steps.blend', 'steps_and_slab')
+        )
+    ],
+    steps=[
+        dict(
+            obj=load_blend_model('./assets/steps.blend', 'steps_with_railing')
+        ), 
+        dict(
+            obj=load_blend_model('./assets/steps.blend', 'steps_small')
+        ), 
+    ], 
+    covering=[
+        dict(
+            obj=load_blend_model('./assets/roof_elements.blend', 'gabled')
+        ), 
+        dict(
+            obj=load_blend_model('./assets/roof_elements.blend', 'conish')
+        ), 
+    ],
+    pillar=[
+        dict(
+            obj=load_blend_hierarchy('./assets/pillars.blend', 'pillar_2')
+        ), 
+        dict(
+            obj=load_blend_hierarchy('./assets/pillars.blend', 'pillar_3')
+        ), 
+        dict(
+            obj=load_blend_hierarchy('./assets/pillars.blend', 'pillar_4')
+        ), 
+        dict(
+            obj=load_blend_hierarchy('./assets/pillars.blend', 'pillar_5')
+        ), 
+        dict(
+            obj=load_blend_hierarchy('./assets/pillars.blend', 'pillar_6')
+        ), 
+    ],
+    balcony=[
+        dict(
+            obj=load_blend_hierarchy('./assets/balcony.blend', 'balcony')
+        )
+    ],
+    balustrade=[
+        dict(
+            obj=load_blend_hierarchy('./assets/balcony.blend', 'balustrade_1')
+        ),
+        dict(
+            obj=load_blend_hierarchy('./assets/balcony.blend', 'balustrade_2')
+        ),
+        dict(
+            obj=load_blend_hierarchy('./assets/balcony.blend', 'balustrade_3')
+        ),
+        dict(
+            obj=load_blend_hierarchy('./assets/balcony.blend', 'balustrade_4')
+        ),
+    ], 
+    window=[
+        dict(
+            obj=load_blend_model('assets/window.blend', 'wind_low')
+        )
+    ],
+    door=[
+        dict(
+            obj=load_blend_model('assets/door.blend', 'Mansion Door')
+        )
+    ],
 )
 """

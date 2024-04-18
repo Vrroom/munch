@@ -40,23 +40,28 @@ from perlin_numpy import (
     generate_perlin_noise_2d, generate_perlin_noise_3d
 )
 
-#print(flatten_object_tree(bpy.data.objects['Bench']))
-names = [f'balustrade_{i+1}' for i in range(4)]
-#names = ['balustra']
-for name in names :
-    obj = bpy.data.objects[name]
-    print(obj.type)
-    m, M = bounding_box_object(obj)
-    rot_matrix = np.array([
-        [1, 0, 0],
-        [0, 0, 1],
-        [0, 1, 0]
-    ])
-    hom_mat  = homogenize_rotation_matrix(rot_matrix)
+scope = Scope(3, np.array([1, 0, 0]), euler_xyz_rotation_matrix(0.5, 0.5, 0), [1,1, 0.1])
 
-#    hom_mat = homogenize_translation(-np.array(m))
-    apply_matrix_to_obj(obj, hom_mat)
-#print(m, M)
+#scope.draw()
+fit_in_scope_using_modifiers(bpy.data.objects['Window'], scope)
+#print(flatten_object_tree(bpy.data.objects['Bench']))
+#names = [f'Window' for i in range(4)]
+##names = ['balustra']
+#for name in names :
+#    obj = bpy.data.objects[name]
+#    print(obj.type)
+#    m, M = bounding_box_object(obj)
+#    print(m, M)
+##    rot_matrix = np.array([
+##        [1, 0, 0],
+##        [0, 0, 1],
+##        [0, 1, 0]
+##    ])
+##    hom_mat  = homogenize_rotation_matrix(rot_matrix)
+
+##    hom_mat = homogenize_translation(-np.array(m))
+#    apply_matrix_to_obj(obj, hom_mat)
+##print(m, M)
 
 #rot_matrix = np.array([
 #    [0, 1, 0],
