@@ -7,6 +7,7 @@ def uniform (n) :
     return [1. / n for _ in range(n)]
 
 ALWAYS = lambda *args, **kwargs: True
+NEVER = lambda *args, **kwargs: False
 
 class Production () : 
     

@@ -34,6 +34,15 @@ def subdivide_n (obj, n=2):
             bpy.ops.mesh.subdivide()
         bpy.ops.object.editmode_toggle()
 
+def subdivide_mesh_n (obj, n=3) : 
+    with active_object_context(obj) : 
+        #bpy.ops.object.editmode_toggle()
+        bpy.ops.object.modifier_add(type='SUBSURF')
+        bpy.context.object.modifiers['Subdivision'].subdivision_type = 'SIMPLE'
+        bpy.context.object.modifiers['Subdivision'].levels = n
+        bpy.ops.object.modifier_apply(modifier='Subdivision')
+        # bpy.ops.object.editmode_toggle()
+
 def min_tuple (ta, tb) : 
     return tuple([min(a, b) for a, b in zip(ta, tb)])
 

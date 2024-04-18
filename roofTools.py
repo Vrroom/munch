@@ -24,7 +24,9 @@ def mansard_roof (width, length, height, point_frac, name='mansard') :
         [1, 2, 6, 7],
         [4, 5, 6, 7]
     ]
-    return make_mesh(verts, faces, name=name)
+    obj = make_mesh(verts, faces, name=name)
+    subdivide_mesh_n(obj)
+    return obj
     
 def hipped_roof (width, length, height, point_frac, name='hipped') : 
     x1 = length * point_frac
@@ -43,7 +45,9 @@ def hipped_roof (width, length, height, point_frac, name='hipped') :
         [0, 4, 5, 3],
         [1, 4, 5, 2]
     ]
-    return make_mesh(verts, faces, name=name)
+    obj = make_mesh(verts, faces, name=name)
+    subdivide_mesh_n(obj)
+    return obj
 
 def gabled_roof (width, length, height, name='gabled') : 
     return hipped_roof(width, length, height, 0, name=name)

@@ -259,7 +259,6 @@ def compose_scope_modifiers (*args) :
 def two_level_compose (s_mod1, s_mod_list) :
         
     def new_mod(x) : 
-        print(x)
         out = s_mod1(x) 
         assert len(out) == len(s_mod_list), f'the output of first modifier should be same length as second'
         new_scopes =  []

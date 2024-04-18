@@ -169,5 +169,10 @@ dict(
             obj=load_blend_model('assets/door.blend', 'Mansion Door')
         )
     ],
+    chimney=[
+        dict(
+            obj=load_blend_model('assets/chimney.blend', 'chimney')
+        )
+    ],
 )
 """

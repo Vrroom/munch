@@ -116,6 +116,12 @@ def check_intersect (node, node_list) :
             return True
     return False
 
+def check_intersect_exact (node, node_list) : 
+    for that in node_list : 
+        if node.scope.approx_intersect(that.scope, 1.0) and that.id != 'epsilon': 
+            return True
+    return False
+
 def check_contained (node, node_list) : 
     for that in node_list : 
         if node.scope.contained_in(that.scope) and that.id != 'epsilon': 
@@ -135,3 +141,10 @@ def get_ancs (node) :
         root = root.parent
     ancs.append(root) 
     return ancs
+
+def find_anc_with_axiom (node, axiom) : 
+    anc = node
+    while anc.id != axiom and not anc.is_root():
+        anc = anc.parent
+    assert anc.id == axiom, f'Probably couldn\'t find ancestor with axiom node id = {node.id}' 
+    return anc
