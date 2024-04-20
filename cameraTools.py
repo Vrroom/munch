@@ -41,3 +41,11 @@ def set_render_engine (engine='CYCLES') :
 def set_render_samples (samples=1024):
     bpy.context.scene.cycles.samples = samples
 
+def set_render_device(device='GPU', device_type='CUDA') :
+    bpy.context.scene.cycles.device = device
+    bpy.context.preferences.addons['cycles'].preferences.compute_device_type = device_type
+
+def configure_renderer () : 
+    set_render_engine()
+    set_render_samples()
+    set_render_device()

@@ -1,3 +1,8 @@
+from infinigen.assets.lighting import sky_lighting
+from infinigen.assets.scatters import grass, ivy
+from infinigen.assets.materials import ice, bark_birch, dirt, lava, mud, sand, sandstone, cobble_stone
+from infinigen.assets.fluid import liquid_particle_material, fluid
+from infinigen.assets.weather import kole_clouds
 import bpy 
 import numpy as np
 import math
@@ -10,7 +15,7 @@ import sys
 import os
 print(os.getcwd())
 sys.path.append(os.getcwd())
-import utils, drawTools, node, scope, production, graphTools, bbox, roofTools, assetDict
+import utils, drawTools, node, scope, production, graphTools, bbox, roofTools, assetDict, cameraTools
 reload(utils)
 reload(drawTools)
 reload(node)
@@ -20,6 +25,7 @@ reload(graphTools)
 reload(bbox)
 reload(roofTools)
 reload(assetDict)
+reload(cameraTools)
 from utils import *
 from drawTools import *
 from node import *
@@ -29,6 +35,7 @@ from graphTools import *
 from bbox import *
 from roofTools import *
 from assetDict import *
+from cameraTools import *
 import numpy as np 
 from PIL import Image
 from skimage.measure import label
@@ -41,14 +48,19 @@ from perlin_numpy import (
     generate_fractal_noise_2d, generate_fractal_noise_3d,
     generate_perlin_noise_2d, generate_perlin_noise_3d
 )
+import argparse
 
 #seed_everything(42) 
 
-clear_all()
+bpy.ops.preferences.addon_enable(module='flip_fluids_addon')
+bpy.ops.flip_fluid_operators.complete_installation()
 
 #####################################################################
 ## PERLIN NOISE
 #####################################################################
+
+def generate_house_on_footprint (footprint) : 
+    pass
 
 NOISE = generate_perlin_noise_3d(
     (128, 128, 128), (4, 4, 4),
@@ -57,7 +69,6 @@ NOISE = generate_perlin_noise_3d(
 FRACTAL_NOISE = generate_fractal_noise_3d(
     (128, 128, 128), (4, 4, 4), 1, tileable=(True, True, True)
 )
-
 
 #####################################################################
 ## ASSET DATABASE
@@ -68,10 +79,10 @@ ASSET_DICT = eval(ASSET_DICT)
 #####################################################################
 ## FLOOR
 #####################################################################
-NUM_FLOORS = 2
+NUM_FLOORS = random.randint(2, 4)
 FLOOR_HEIGHT = 3
-FLOOR_WIDTH = 4.5
-FLOOR_LENGTH = 5
+FLOOR_WIDTH = random.uniform(4., 6.)
+FLOOR_LENGTH = random.uniform(4., 7.)
 GROUND_BASE = random.uniform(0.5, 1)
 FOOTPRINT = Scope(3, np.array([0, 0, 0]), np.eye(3), [FLOOR_WIDTH, FLOOR_LENGTH, GROUND_BASE + (NUM_FLOORS + 1) * FLOOR_HEIGHT])
 
@@ -85,7 +96,7 @@ DOOR_DEPTH = .1
 #####################################################################
 ## WINDOW
 #####################################################################
-WINDOW_SPACING = 1.5
+WINDOW_SPACING = random.uniform(1.2, 1.8)
 WINDOW_WIDTH = 0.8
 WINDOW_HEIGHT = 1.6
 
@@ -97,6 +108,12 @@ ABUTMENT_WIDTH = random.uniform(1.5, 3)
 ABUTMENT_LENGTH = ABUTMENT_WIDTH
 N_ABUTMENT = random.randint(1, 4) 
 NBRS = [(0, 1), (0, 3), (1, 2), (2, 4), (3, 5), (5, 6), (4, 7), (6, 7)]
+
+#####################################################################
+## DECORATIONS
+#####################################################################
+APPLY_IVY = random.choice([True, False])
+GROUND_MAT = random.choice([mud, sand, sandstone, cobble_stone])
     
 while True :
     ABUTS = random.sample([0, 1, 2, 3, 4, 5, 6, 7], k=N_ABUTMENT)
@@ -178,7 +195,19 @@ def ROOF_SCOPE_MOD (scope) :
         scope.global_c, 
         [CHIMNEY_WIDTH, CHIMNEY_WIDTH, CHIMNEY_HEIGHT]
     )
-    return [scope, chimney_scope] 
+    smoke_scope = Scope(
+        3,
+        scope.global_x + \
+            CHIMNEY_X * scope.size[0] * scope.global_c[:, 0] + \
+            CHIMNEY_Y * scope.size[1] * scope.global_c[:, 1] + \
+            (CHIMNEY_HEIGHT - CHIMNEY_WIDTH) * scope.global_c[:, 2],
+        scope.global_c,
+        [CHIMNEY_WIDTH, CHIMNEY_WIDTH, CHIMNEY_WIDTH]
+    )
+
+    roof_scope = deepcopy(scope)
+    roof_scope.size[2] *= random.uniform(0.5, 1.0)
+    return [scope, chimney_scope, smoke_scope] 
 
 roof = Production(
     priority=1, 
@@ -187,11 +216,14 @@ roof = Production(
     scope_modifiers=[
         ROOF_SCOPE_MOD
     ],
-    succ=[['roof_literal', 'chimney_literal']],
+    succ=[['roof_literal', 'chimney_literal', 'epsilon']],
     prob=[1.0]
 )
 
 chimney_literal = Production(priority=1, pred='chimney_literal')
+
+smoke_literal = Production(priority=1, pred='smoke_literal')
+
 roof_literal = Production(priority=1, pred='roof_literal')
 
 ground_floor = Production(
@@ -768,7 +800,7 @@ geometry_registry = dict(
     window_literal=dict(object=ASSET_DICT['window'][0]['obj']),
     door_literal=dict(object=ASSET_DICT['door'][0]['obj']),
     chimney_literal=dict(object=ASSET_DICT['chimney'][0]['obj']), 
-    roof_literal=dict(objects=roof_objects),
+    roof_literal=dict(objects=roof_objects, any=True),
 )
 
 prods = [single_home, ground_floor, floor, epsilon, abutments, 
@@ -783,22 +815,7 @@ prods = [single_home, ground_floor, floor, epsilon, abutments,
         balustrade_literal, taper_all, taper, taper2,
         entrance_ext, door_entrance_ext, steps_and_slab, 
         steps_and_slab_literal, steps, steps_literal, steps_railing_literal,
-        roof, chimney_literal, roof_literal]
-
-node = run_derivation(prods, 'single_home', FOOTPRINT)
-leaf_nodes = leaves(node)
-
-all_objs = [_.draw(geometry_registry) for _ in leaf_nodes]
-
-wall_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'wall_literal']
-ground_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'ground_literal']
-roof_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'roof_literal'] 
-
-for obj in wall_objs : 
-    subdivide_n(obj, 3)
-    
-for obj in ground_objs : 
-    subdivide_n(obj, 3)
+        roof, chimney_literal, roof_literal, smoke_literal]
 
 def apply_wall_color(pt) :
     i, j, k = [int(127 * _) for _ in pt]
@@ -812,6 +829,63 @@ def apply_roof_color (pt) :
     i, j, k = [int(127 * _) for _ in pt]
     return clamp_elem_wise_np(FRACTAL_NOISE[i, j, k] / 2.0 + ROOF_COLOR, 0, 1)
 
+clear_all()
+node = run_derivation(prods, 'single_home', FOOTPRINT)
+leaf_nodes = leaves(node)
+
+all_objs = [_.draw(geometry_registry) for _ in leaf_nodes]
+
+wall_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'wall_literal']
+ground_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'ground_literal']
+roof_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'roof_literal'] 
+smoke_objs = [_ for n, _ in zip(leaf_nodes, all_objs) if n.id == 'smoke_literal'] 
+
+print('Number of smoke objs = ', len(smoke_objs))
+
+for obj in wall_objs : 
+    subdivide_n(obj, 3)
+    
+for obj in ground_objs : 
+    subdivide_n(obj, 3)
+ 
+if APPLY_IVY :
+    print('Applying ivy on roof')
+    for obj in roof_objs :
+        ivy.apply(obj)
+    
+sky_lighting.add_lighting()
+ 
 solid_texture_objects(wall_objs, apply_wall_color)
 solid_texture_objects(ground_objs, apply_ground_color)
 solid_texture_objects(roof_objs, apply_roof_color)
+
+base = Scope(
+    3, 
+    np.array([-50, -50, -0.5]),
+    np.eye(3),
+    [100, 100, 0.5]
+)
+base_obj = base.draw()
+GROUND_MAT.apply(base_obj)
+# grass.apply(base_obj)
+
+configure_renderer()
+camera_obj = bpy.data.objects['Camera']
+current_location = Vector((-35.2287, -5.5878, 24.3083))
+radius = np.sqrt(current_location.x ** 2 + current_location.y ** 2)  
+thetas = np.linspace(0, 2 * np.pi, 250, endpoint=False)
+camera_trajectory = [(2 + radius * np.cos(_), 2 + radius * np.sin(_), current_location.z) for _ in thetas]
+
+for i in range(1, 250) : 
+    look_direction = normalized(np.array([2,2,7]) -np.array(camera_trajectory[i]))
+    place_camera_insert_key_frame(camera_obj, camera_trajectory[i], look_direction, [0,0,1], i)
+
+if "--" not in sys.argv:
+    argv = []  
+else:
+    argv = sys.argv[sys.argv.index("--") + 1:]  
+
+parser = argparse.ArgumentParser(description='Run script')
+parser.add_argument('--out_path', type=str, help='out path')
+args = parser.parse_args(argv)
+bpy.ops.wm.save_as_mainfile(filepath=args.out_path)
