@@ -1,4 +1,4 @@
-OUT_PREF=scene2
+OUT_PREF=scene4
 mkdir ${OUT_PREF}
 
 ../general-purpose/infinigen/blender/blender -b -P single_home.py -- --out_path ${OUT_PREF}.blend

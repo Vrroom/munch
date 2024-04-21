@@ -2,6 +2,10 @@ from scipy.spatial.transform import Rotation
 import numpy as np
 import random
 import bpy
+import string
+
+def random_string() :
+    return ''.join(random.choices(string.ascii_lowercase, k=20))
 
 def rotation_x(theta):
     c, s = np.cos(theta), np.sin(theta)

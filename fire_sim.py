@@ -1,31 +1,11 @@
-from infinigen.assets.lighting import sky_lighting
-from infinigen.assets.scatters import grass, ivy
-from infinigen.assets.materials import ice, bark_birch, dirt, lava, mud, sand, sandstone
-from infinigen.assets.fluid import liquid_particle_material
-from infinigen.assets.weather import kole_clouds
 import bpy 
 import numpy as np
 import math
 from functools import partial 
-from itertools import product, combinations
 import bmesh
 import mathutils
-from importlib import reload
 import sys
 import os
-print(os.getcwd())
-sys.path.append(os.getcwd())
-import utils, drawTools, node, scope, production, graphTools, bbox, roofTools, assetDict, cameraTools
-reload(utils)
-reload(drawTools)
-reload(node)
-reload(scope)
-reload(production)
-reload(graphTools)
-reload(bbox)
-reload(roofTools)
-reload(assetDict)
-reload(cameraTools)
 from utils import *
 from drawTools import *
 from node import *
@@ -38,16 +18,6 @@ from assetDict import *
 from cameraTools import *
 import numpy as np 
 from PIL import Image
-from skimage.measure import label
-from skimage.color import rgb2gray
-from skimage.feature import canny
-from skimage.morphology import dilation
-from scipy import ndimage as ndi
-import matplotlib.pyplot as plt
-from perlin_numpy import (
-    generate_fractal_noise_2d, generate_fractal_noise_3d,
-    generate_perlin_noise_2d, generate_perlin_noise_3d
-)
 
 def prepare_vol_material (material_name) : 
     mat = bpy.data.materials.new(name=material_name)
@@ -130,11 +100,11 @@ def make_fire_in_scope (scope, domain) :
         fluid_domain_settings.cache_type = 'ALL'
         bpy.ops.fluid.bake_all()
 
-scope = Scope(
-    3, 
-    np.zeros(3), 
-    np.eye(3), 
-    [2,2,10]
-)
-obj = scope.draw()
-make_fire_in_scope(scope, obj)
+#scope = Scope(
+#    3, 
+#    np.zeros(3), 
+#    np.eye(3), 
+#    [2,2,10]
+#)
+#obj = scope.draw()
+#make_fire_in_scope(scope, obj)
