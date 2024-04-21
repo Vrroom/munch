@@ -36,11 +36,11 @@ def prepare_vol_material (material_name) :
     principled_volume.location = (-200, 200)
 
     # Set the properties for Principled Volume
-    principled_volume.inputs['Color'].default_value = (1.0, 0.0, 0.0, 1)  # red
+    principled_volume.inputs['Color'].default_value = (0.5, 0.5, 0.5, 1)  # red
     principled_volume.inputs['Density'].default_value = 20
     principled_volume.inputs['Anisotropy'].default_value = 0.8
     principled_volume.inputs['Absorption Color'].default_value = (0, 0, 0, 1)  # Black
-    principled_volume.inputs['Emission Color'].default_value = (1.0, 0.5, 0.0, 1)  # orange
+    principled_volume.inputs['Emission Color'].default_value = (0.9, 0.9, 0.9, 1)  # orange
     principled_volume.inputs['Blackbody Intensity'].default_value = 1.0
     principled_volume.inputs['Blackbody Tint'].default_value = (1, 1, 1, 1)  # White
     principled_volume.inputs['Temperature'].default_value = 1000

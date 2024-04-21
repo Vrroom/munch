@@ -52,6 +52,18 @@ from perlin_numpy import (
 )
 import argparse
 
+if "--" not in sys.argv:
+    argv = []  
+else:
+    argv = sys.argv[sys.argv.index("--") + 1:]  
+
+parser = argparse.ArgumentParser(description='Run script')
+parser.add_argument('--out_path', type=str, help='out path')
+parser.add_argument('--debug_run', action='store_true', help='is this a debug run')
+parser.add_argument('--seed', type=int, default=0, help='seed value')
+args = parser.parse_args(argv)
+
+seed_everything(args.seed)
 
 bpy.ops.preferences.addon_enable(module='flip_fluids_addon')
 bpy.ops.flip_fluid_operators.complete_installation()
@@ -850,7 +862,7 @@ def generate_house (origin=np.array([0,0,0])) :
     for obj in ground_objs : 
         subdivide_n(obj, 3)
      
-    if APPLY_IVY :
+    if APPLY_IVY and not args.debug_run:
         print('Applying ivy on roof')
         for obj in roof_objs :
             ivy.apply(obj)
@@ -862,15 +874,17 @@ def generate_house (origin=np.array([0,0,0])) :
     return FOOTPRINT
 
 clear_all()
+
+ground_base = Scope(
+    3, 
+    np.array([-30, -30, 0.0]),
+    np.eye(3), 
+    np.array([60, 60, 0.5])
+)
+ground_obj = ground_base.draw()
+grass.apply(ground_obj)
     
 sky_lighting.add_lighting()
-
-start = np.array((-20, -20, 0))
-
-for i in range(4) :
-    for j in range(4) : 
-        generate_house(start + np.array([i * 10, j * 10, 0]))
- 
 base = Scope(
     3, 
     np.array([-200, -200, -0.5]),
@@ -881,19 +895,20 @@ base_obj = base.draw()
 GROUND_MAT = water #random.choice([mud, sand, sandstone, cobble_stone])
 GROUND_MAT.apply(base_obj)
 
-ground_base = Scope(
-    3, 
-    np.array([-30, -30, 0.0]),
-    np.eye(3), 
-    np.array([60, 60, 0.5])
-)
-ground_obj = ground_base.draw()
-grass.apply(ground_obj)
+start = np.array((-20, -20, 0))
+
+if not args.debug_run : 
+    for i in range(4) :
+        for j in range(4) : 
+            generate_house(start + np.array([i * 10, j * 10, 0]))
+else :
+    generate_house()
+
 
 configure_renderer()
 
 camera_obj = bpy.data.objects['Camera']
-current_location = Vector((-35.2287, -5.5878, 24.3083))
+current_location = Vector((-35.2287, -10.5878, 30.3083))
 radius = np.sqrt(current_location.x ** 2 + current_location.y ** 2)  
 thetas = np.linspace(0, 2 * np.pi, 250, endpoint=False)
 camera_trajectory = [(2 + radius * np.cos(_), 2 + radius * np.sin(_), current_location.z) for _ in thetas]
@@ -901,13 +916,4 @@ camera_trajectory = [(2 + radius * np.cos(_), 2 + radius * np.sin(_), current_lo
 for i in range(1, 250) : 
     look_direction = normalized(np.array([2,2,7]) -np.array(camera_trajectory[i]))
     place_camera_insert_key_frame(camera_obj, camera_trajectory[i], look_direction, [0,0,1], i)
-
-if "--" not in sys.argv:
-    argv = []  
-else:
-    argv = sys.argv[sys.argv.index("--") + 1:]  
-
-parser = argparse.ArgumentParser(description='Run script')
-parser.add_argument('--out_path', type=str, help='out path')
-args = parser.parse_args(argv)
 bpy.ops.wm.save_as_mainfile(filepath=args.out_path)
