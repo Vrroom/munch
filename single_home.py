@@ -135,7 +135,7 @@ def generate_house (origin=np.array([0,0,0])) :
     #####################################################################
     ## DECORATIONS
     #####################################################################
-    APPLY_IVY = random.choice([True, False])
+    APPLY_IVY = random.choice([True, False, False, False])
 
     #####################################################################
     ## BALCONY 

@@ -38,7 +38,7 @@ def place_camera_insert_key_frame (camera_obj, location, look_direction, up, fra
 def set_render_engine (engine='CYCLES') :
     bpy.context.scene.render.engine = engine
 
-def set_render_samples (samples=1024):
+def set_render_samples (samples=256):
     bpy.context.scene.cycles.samples = samples
 
 def set_render_device(device='GPU', device_type='CUDA') :
